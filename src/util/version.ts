@@ -2,7 +2,7 @@ import { semver } from "bun"
 import { loadFile, writeFile } from "../api/file"
 
 const FILENAME_VERSION = ".version"
-const VERSION = "1.3.0"
+const VERSION = "1.3.1"
 
 export type VersionReport = {
   message: string
