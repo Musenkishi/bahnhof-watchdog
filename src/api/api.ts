@@ -5,6 +5,7 @@ import { NetworkData } from "../types/network"
 import { OperationsData } from "../types/operation"
 import { ProductNetwork, ProductsData } from "../types/product"
 import { findToken, getSessionId } from "../util/credential"
+import { sleep } from "bun"
 
 const api = axios.create({
   timeout: 30000,
@@ -19,7 +20,7 @@ const apiProductsUrl = new URL("bredband/products", apiBaseUrl).toString()
 
 const getTokens = async (
   url: string,
-  callback: (csrfToken: string, cookieSession: string) => void
+  callback: (csrfToken: string, cookieSession: string) => void,
 ) => {
   api.get(url).then((result) => {
     const token = findToken(result.data)
@@ -37,7 +38,7 @@ const getOperationsStatus = async (
   url: string,
   token: string,
   sessionId: string,
-  callback: (operations: OperationsData) => void
+  callback: (operations: OperationsData) => void,
 ) => {
   try {
     const response = await api.get(url, {
@@ -63,7 +64,7 @@ const getAvailableNetworks = async (
   address: string,
   token: string,
   sessionId: string,
-  callback: (response: NetworkData) => void
+  callback: (response: NetworkData) => void,
 ) => {
   try {
     const response = await api.post(
@@ -77,7 +78,7 @@ const getAvailableNetworks = async (
           "X-CSRF-TOKEN": token,
           "X-Requested-With": "XMLHttpRequest",
         },
-      }
+      },
     )
 
     const data: ApiResponse<NetworkData> = response.data
@@ -94,7 +95,7 @@ const getAvailableNetworks = async (
         case "COVERAGE_NOT_FOUND":
           console.error(
             "Could not find any networks available for address:",
-            address
+            address,
           )
           break
 
@@ -113,36 +114,49 @@ const getAvailableProducts = async (
   networks: ProductNetwork[],
   token: string,
   sessionId: string,
-  callback: (response: ProductsData) => void
+  callback: (response: ProductsData) => void,
 ) => {
-  try {
-    const response = await api.post(
-      url,
-      {
-        networks: networks,
-      },
-      {
-        headers: {
-          Cookie: "PHPSESSID=" + sessionId,
-          "X-CSRF-TOKEN": token,
-          "X-Requested-With": "XMLHttpRequest",
+  const maxRetries = 5
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const response = await api.post(
+        url,
+        {
+          networks: networks,
         },
+        {
+          headers: {
+            Cookie: "PHPSESSID=" + sessionId,
+            "X-CSRF-TOKEN": token,
+            "X-Requested-With": "XMLHttpRequest",
+          },
+        },
+      )
+      const data: ApiResponse<ProductsData> = response.data
+      if (data.status != "ok") {
+        console.error("Could not get available products:", JSON.stringify(data))
+        return
       }
-    )
-    const data: ApiResponse<ProductsData> = response.data
-    if (data.status != "ok") {
-      console.error("Could not get available products:", JSON.stringify(data))
-    } else {
-      callback(data.data)
+
+      if (data.data.products.length > 0 || attempt === maxRetries) {
+        callback(data.data)
+        return
+      }
+
+      console.warn(
+        `Product list was empty. Retrying (${attempt}/${maxRetries})...`
+      )
+      await sleep(1000) // Wait for 1 second before calling the callback
+    } catch (err) {
+      console.error(err)
     }
-  } catch (err) {
-    console.error(err)
   }
 }
 
 export const getProducts = (
   address: string,
-  callback: (response: ProductsData) => void
+  callback: (response: ProductsData) => void,
 ) => {
   getTokens(tokenUrl, (csrfToken: string, cookieSession: string) => {
     getAvailableNetworks(
@@ -156,8 +170,9 @@ export const getProducts = (
             return {
               city: network.city,
               network: network.value,
+              id: network.id,
             }
-          }
+          },
         )
         getAvailableProducts(
           apiProductsUrl,
@@ -166,16 +181,16 @@ export const getProducts = (
           cookieSession,
           (response) => {
             callback(response)
-          }
+          },
         )
-      }
+      },
     )
   })
 }
 
 export const getOperations = (
   postalCode: string,
-  callback: (operations: OperationsData) => void
+  callback: (operations: OperationsData) => void,
 ) => {
   const apiUrl = apiOperationsUrl + "/" + postalCode
   getTokens(tokenUrl, (csrfToken: string, cookieSession: string) => {
@@ -188,7 +203,7 @@ export const sendWebhook = async (message: string) => {
   const webhookUrl = process.env.WEBHOOK_URL
   if (!webhookUrl) {
     console.log(
-      "Not sending webhook. Environment variable WEBHOOK_URL is missing."
+      "Not sending webhook. Environment variable WEBHOOK_URL is missing.",
     )
     return
   }
@@ -204,7 +219,7 @@ export const sendWebhook = async (message: string) => {
         headers: {
           "Content-type": "application/json",
         },
-      }
+      },
     )
   } catch (err) {
     console.error(err)

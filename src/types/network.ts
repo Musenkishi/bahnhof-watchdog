@@ -1,4 +1,5 @@
 export type Network = {
+  id: string
   label: string
   value: string
   name: string

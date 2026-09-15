@@ -1,0 +1,17 @@
+meta {
+  name: Get outage operations
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/ajax/kundservice/driftinfo/{{postalCode}}
+  body: none
+  auth: none
+}
+
+headers {
+  Cookie: PHPSESSID={{sessionId}}
+  X-CSRF-TOKEN: {{csrfToken}}
+  X-Requested-With: XMLHttpRequest
+}

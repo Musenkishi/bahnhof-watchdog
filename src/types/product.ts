@@ -31,28 +31,33 @@ export type Category = {
 
 export type ProductNetwork = {
   city: string
+  id: string
   network: string
 }
 
-export type Product = {
-  type: string
-  discount: Discount
-  bundle: unknown | null
-  contractPeriod: number
-  cancellationTime: number
-  campaign: Campaign
-  params: Param[]
-  category: Category
-  title: string
-  network: ProductNetwork
-  id: number
-  internalTitle: string
-  description: string
-  article: string
-  price: number
+export type BroadbandSpeed = {
+  download: number
+  upload: number
+}
+
+export type Prices = {
   setupFee: number
-  billingPeriod: number
-  hidden: boolean
+  regularPrice: number
+  discountedPrice: number
+}
+
+export type Product = {
+  broadbandSpeed: BroadbandSpeed
+  inBundle: boolean
+  contractPeriod: number | null
+  remoteId: string
+  id: string
+  title: string
+  shortTitle: string
+  shortLabel: string
+  description: string
+  shortDescription: string
+  prices: Prices
 }
 
 export type ProductsData = {

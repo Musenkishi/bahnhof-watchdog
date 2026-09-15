@@ -1,0 +1,10 @@
+vars {
+  baseUrl: https://bahnhof.se
+  address: Street 123A, 12345 ExampleCity
+  postalCode: 12345
+  csrfToken: will-auto-fill-by-bruno-post-script
+  sessionId: will-auto-fill-by-bruno-post-script
+  networkCity: ExampleCity
+  networkValue: will-auto-fill-by-bruno-post-script
+  networkId: will-auto-fill-by-bruno-post-script
+}

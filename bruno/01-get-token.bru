@@ -1,0 +1,40 @@
+meta {
+  name: Get CSRF token and session
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/kundservice/driftinfo
+  body: none
+  auth: none
+}
+
+headers {
+  User-Agent: bruno
+}
+
+script:post-response {
+  const body = res.getBody()
+  const tokenName = "csrf-token"
+  const tokenRegex = new RegExp(
+    `<meta[^>]*name=["']?${tokenName}["']?[^>]*>`,
+    "i",
+  )
+  const tokenTag = body.match(tokenRegex)?.[0]
+  const token = tokenTag?.match(/content=["']([^"']*)["']/i)?.[1]
+
+  if (!token) {
+    throw new Error("Could not find csrf-token in the response HTML")
+  }
+
+  const cookie = bru.cookies.one("PHPSESSID")
+  const sessionId = bru.cookies.get("PHPSESSID") || cookie?.value
+
+  if (!sessionId) {
+    throw new Error("Could not find PHPSESSID in the response cookies")
+  }
+
+  bru.setEnvVar("csrfToken", token)
+  bru.setEnvVar("sessionId", sessionId)
+}

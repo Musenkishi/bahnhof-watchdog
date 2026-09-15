@@ -105,3 +105,6 @@ dist
 
 # data folder
 data/
+
+# bruno vars
+bruno/environments/*.bru

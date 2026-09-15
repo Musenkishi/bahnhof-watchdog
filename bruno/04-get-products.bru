@@ -1,0 +1,30 @@
+meta {
+  name: Get available products
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/ajax/bredband/products
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Cookie: PHPSESSID={{sessionId}}
+  X-CSRF-TOKEN: {{csrfToken}}
+  X-Requested-With: XMLHttpRequest
+}
+
+body:json {
+  {
+    "networks": [
+      {
+        "city": "{{networkCity}}",
+        "network": "{{networkValue}}",
+        "id": "{{networkId}}"
+      }
+    ]
+  }
+}

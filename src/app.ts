@@ -79,6 +79,8 @@ const doPatrol = async (callback: (report: string) => void) => {
             callback(
               "No subscriptions matches your current subscription or none are available on your address"
             )
+            resolve()
+            return
           }
 
           if (listedSubscription.price < currentSubscription.price) {

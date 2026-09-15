@@ -1,0 +1,37 @@
+meta {
+  name: Get available networks
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/ajax/search/networks
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Cookie: PHPSESSID={{sessionId}}
+  X-CSRF-TOKEN: {{csrfToken}}
+  X-Requested-With: XMLHttpRequest
+}
+
+body:json {
+  {
+    "address": "{{address}}"
+  }
+}
+
+script:post-response {
+  const response = res.getBody()
+  const network = response?.data?.networks?.[0]
+
+  if (!network) {
+    throw new Error("Could not find an available network for this address")
+  }
+
+  bru.setEnvVar("networkCity", network.city)
+  bru.setEnvVar("networkValue", network.value)
+  bru.setEnvVar("networkId", network.id)
+}
